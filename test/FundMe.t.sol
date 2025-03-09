@@ -6,7 +6,7 @@ import {StdAssertions} from "../lib/forge-std/src/StdAssertions.sol";
 import {StdChains} from "../lib/forge-std/src/StdChains.sol";
 import {StdCheats, StdCheatsSafe} from "../lib/forge-std/src/StdCheats.sol";
 import {StdUtils} from "../lib/forge-std/src/StdUtils.sol";
-import {Test} from "../lib/forge-std/src/Test.sol";
+import {Test,console2} from "../lib/forge-std/src/Test.sol";
 import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 import {FundMe} from "../src/FundMe.sol";
 
@@ -15,6 +15,7 @@ contract FundMeTest is Test {
     address public  USER = makeAddr("user");
     uint256 constant public SEND_VALUE = 10e18;
     uint256 constant public STARTING_BALANCE = 100e18;
+    uint256 constant public GAS_PRICE = 1;
 
     function setUp() external {
         DeployFundMe deployer = new DeployFundMe();
@@ -65,10 +66,16 @@ contract FundMeTest is Test {
         //Arrange
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
+        uint256 gasStart = gasleft();
 
         //Act
+        vm.txGasPrice(GAS_PRICE);
         vm.prank(fundMe.getOwner());
         fundMe.withdraw();
+
+        uint256 gasEnd = gasleft();
+        uint256 gasUsed = (gasStart - gasEnd) * tx.gasprice;
+        console2.log("Gas USED:" ,gasUsed);
 
         //Assert
         uint256 endingOwnerBalance = fundMe.getOwner().balance;
